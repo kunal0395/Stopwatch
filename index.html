@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stopwatch</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      margin: 50px;
+      background-color: #000; 
+      color: #fff; 
+    }
+
+    #stopwatch-container {
+      background-color: #333;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    #display {
+      font-size: 3em;
+      margin-bottom: 20px;
+    }
+
+    button {
+      font-size: 1em;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    #lapTimes {
+      text-align: left;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="stopwatch-container">
+
+    <h1>Stopwatch</h1>
+
+    <div id="display">00:00:00</div>
+
+    <button onclick="startStopwatch()">Start</button>
+    <button onclick="togglePauseResume()">Pause</button>
+    <button onclick="resetStopwatch()">Reset</button>
+    <button onclick="lap()">Lap</button>
+
+    <div id="lapTimes"></div>
+
+  </div>
+
+  <script>
+    let startTime;
+    let running = false;
+    let paused = false;
+    let laps = [];
+    let intervalId;
+    let pauseTime;
+
+    function startStopwatch() {
+      if (!running) {
+        if (paused) {
+          startTime = Date.now() - pauseTime;
+        } else {
+          startTime = Date.now() - (laps.length > 0 ? laps[laps.length - 1].time : 0);
+          laps = [];
+        }
+
+        running = true;
+        paused = false;
+        updateDisplay();
+        intervalId = setInterval(updateDisplay, 10); 
+      }
+    }
+
+    function togglePauseResume() {
+      if (running) {
+        if (paused) {
+          // Resume
+          paused = false;
+          startTime = Date.now() - pauseTime;
+          intervalId = setInterval(updateDisplay, 10); 
+        } else {
+          // Pause
+          paused = true;
+          clearInterval(intervalId);
+          pauseTime = Date.now() - startTime;
+        }
+      }
+    }
+
+    function resetStopwatch() {
+      running = false;
+      paused = false;
+      clearInterval(intervalId);
+      laps = [];
+      updateDisplay();
+      updateLapTimes();
+    }
+
+    function lap() {
+      if (running && !paused) {
+        const currentTime = Date.now() - startTime;
+        laps.push({ time: currentTime });
+        updateLapTimes();
+      }
+    }
+
+    function updateDisplay() {
+      const currentTime = running ? Date.now() - startTime : 0;
+      const formattedTime = formatTime(currentTime);
+      document.getElementById('display').innerHTML = formattedTime;
+    }
+
+    function updateLapTimes() {
+      const lapTimesContainer = document.getElementById('lapTimes');
+      lapTimesContainer.innerHTML = '';
+      laps.forEach((lap, index) => {
+        const lapTime = formatTime(lap.time);
+        lapTimesContainer.innerHTML += `<div>Lap ${index + 1}: ${lapTime}</div>`;
+      });
+    }
+
+    function formatTime(time) {
+      const minutes = Math.floor(time / (60 * 1000));
+      const seconds = Math.floor((time % (60 * 1000)) / 1000);
+      const milliseconds = Math.floor((time % 1000) / 10); 
+      return `${formatTwoDigits(minutes)}:${formatTwoDigits(seconds)}.${formatTwoDigits(milliseconds)}`;
+    }
+
+    function formatTwoDigits(value) {
+      return value < 10 ? `0${value}` : value;
+    }
+  </script>
+
+</body>
+</html>
